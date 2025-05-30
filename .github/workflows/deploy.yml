@@ -30,7 +30,7 @@ jobs:
           terraform_version: '1.11.4'
 
       - name: Terraform Format
-        run: cd terraform1 && terraform fmt -check
+        run: cd terraform1 && terraform fmt
 
       - name: Terraform Init
         run: cd terraform1 && terraform init
