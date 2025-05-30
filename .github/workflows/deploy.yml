@@ -89,10 +89,18 @@ jobs:
           role-to-assume: ${{ secrets.ROLE }}
           aws-region: us-east-1
 
-      - name: Deploy to ECS
+      - name: Deploy Patient Service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ecs-task-def.json
-          service: my-service
-          cluster: my-cluster
+          task-definition: ecs-task-def-patient.json
+          service: ${{ secrets.ECS_SERVICE_PATIENT }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Deploy Appointment Service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ecs-task-def-appointment.json
+          service: ${{ secrets.ECS_SERVICE_APPOINTMENT }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
           wait-for-service-stability: true

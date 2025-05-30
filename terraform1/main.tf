@@ -111,3 +111,135 @@ resource "aws_route_table_association" "public_2" {
   subnet_id      = aws_subnet.public_2.id
   route_table_id = aws_route_table.public.id
 }
+
+# Existing resources remain unchanged...
+
+# ECS Task Definitions
+resource "aws_ecs_task_definition" "patient" {
+  family                   = "patient-task"
+  requires_compatibilities = ["FARGATE"]
+  network_mode            = "awsvpc"
+  cpu                     = "256"
+  memory                  = "512"
+  execution_role_arn      = aws_iam_role.ecs_task_execution.arn
+  container_definitions   = file("ecs-task-def-patient.json")
+}
+
+resource "aws_ecs_task_definition" "appointment" {
+  family                   = "appointment-task"
+  requires_compatibilities = ["FARGATE"]
+  network_mode            = "awsvpc"
+  cpu                     = "256"
+  memory                  = "512"
+  execution_role_arn      = aws_iam_role.ecs_task_execution.arn
+  container_definitions   = file("ecs-task-def-appointment.json")
+}
+
+# Target Groups
+resource "aws_lb_target_group" "patient" {
+  name     = "patient-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+  target_type = "ip"
+}
+
+resource "aws_lb_target_group" "appointment" {
+  name     = "appointment-tg"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+  target_type = "ip"
+}
+
+# Listeners
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Default response"
+      status_code  = "404"
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "patient" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 10
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.patient.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/patient*"]
+    }
+  }
+}
+
+resource "aws_lb_listener_rule" "appointment" {
+  listener_arn = aws_lb_listener.http.arn
+  priority     = 20
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.appointment.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/appointment*"]
+    }
+  }
+}
+
+# ECS Services
+resource "aws_ecs_service" "patient" {
+  name            = "patient"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.patient.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = [aws_subnet.public_1.id, aws_subnet.public_2.id]
+    security_groups = [aws_security_group.lb_sg.id]
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.patient.arn
+    container_name   = "patient"
+    container_port   = 80
+  }
+
+  depends_on = [aws_lb_listener_rule.patient]
+}
+
+resource "aws_ecs_service" "appointment" {
+  name            = "appointment"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.appointment.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = [aws_subnet.public_1.id, aws_subnet.public_2.id]
+    security_groups = [aws_security_group.lb_sg.id]
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.appointment.arn
+    container_name   = "appointment"
+    container_port   = 80
+  }
+
+  depends_on = [aws_lb_listener_rule.appointment]
+}
