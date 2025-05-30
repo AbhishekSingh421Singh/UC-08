@@ -214,7 +214,7 @@ resource "aws_ecs_service" "patient" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.patient.arn
-    container_name   = "patient"
+    container_name   = "patient-container"
     container_port   = 80
   }
 
@@ -236,7 +236,7 @@ resource "aws_ecs_service" "appointment" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.appointment.arn
-    container_name   = "appointment"
+    container_name   = "appointment-container"
     container_port   = 80
   }
 
