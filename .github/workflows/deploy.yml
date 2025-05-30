@@ -30,19 +30,19 @@ jobs:
           terraform_version: '1.11.4'
 
       - name: Terraform Format
-        run: cd terraform && terraform fmt -check
+        run: cd terraform1 && terraform fmt -check
 
       - name: Terraform Init
-        run: cd terraform && terraform init
+        run: cd terraform1 && terraform init
 
       - name: Terraform Validate
-        run: cd terraform && terraform validate
+        run: cd terraform1 && terraform validate
 
       - name: Terraform Plan
-        run: cd terraform && terraform plan
+        run: cd terraform1 && terraform plan
 
       - name: Terraform Apply
-        run: cd terraform && terraform apply -auto-approve
+        run: cd terraform1 && terraform apply -auto-approve
 
   docker:
     name: Build & Push Docker Images
