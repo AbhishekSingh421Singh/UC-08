@@ -1,0 +1,14 @@
+[
+  {
+    "name": "patient-container",
+    "image": "node:18-alpine",
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "hostPort": 80,
+        "protocol": "tcp"
+      }
+    ]
+  }
+]
