@@ -29,78 +29,81 @@ jobs:
         with:
           terraform_version: '1.11.4'
 
-      - name: Terraform Format
-        run: cd terraform1 && terraform fmt
+      # - name: Terraform Format
+      #   run: cd terraform1 && terraform fmt
 
       - name: Terraform Init
         run: cd terraform1 && terraform init
 
-      - name: Terraform Validate
-        run: cd terraform1 && terraform validate
+      # - name: Terraform Validate
+      #   run: cd terraform1 && terraform validate
 
-      - name: Terraform Plan
-        run: cd terraform1 && terraform plan
+      # - name: Terraform Plan
+      #   run: cd terraform1 && terraform plan
 
-      - name: Terraform Apply
-        run: cd terraform1 && terraform apply -auto-approve
+      # - name: Terraform Apply
+      #   run: cd terraform1 && terraform apply -auto-approve
 
-  docker:
-    name: Build & Push Docker Images
-    runs-on: ubuntu-latest
-    needs: terraform
+      - name: Terraform Destroy
+        run: cd terraform1 && terraform destroy -auto-approve
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  # docker:
+  #   name: Build & Push Docker Images
+  #   runs-on: ubuntu-latest
+  #   needs: terraform
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.ROLE }}
-          aws-region: us-east-1
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          aws-region: us-east-1
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         role-to-assume: ${{ secrets.ROLE }}
+  #         aws-region: us-east-1
 
-      - name: Build and Push Patient Image
-        run: |
-          docker build -t ${{ secrets.ECR_REPO_URI_PATIENT }} ./microservices/patient
-          docker push ${{ secrets.ECR_REPO_URI_PATIENT }}
+  #     - name: Login to Amazon ECR
+  #       uses: aws-actions/amazon-ecr-login@v1
+  #       with:
+  #         aws-region: us-east-1
 
-      - name: Build and Push Appointment Image
-        run: |
-          docker build -t ${{ secrets.ECR_REPO_URI_APPOINTMENT }} ./microservices/appointment
-          docker push ${{ secrets.ECR_REPO_URI_APPOINTMENT }}
+  #     - name: Build and Push Patient Image
+  #       run: |
+  #         docker build -t ${{ secrets.ECR_REPO_URI_PATIENT }} ./microservices/patient
+  #         docker push ${{ secrets.ECR_REPO_URI_PATIENT }}
 
-  deploy:
-    name: Deploy to ECS
-    runs-on: ubuntu-latest
-    needs: docker
+  #     - name: Build and Push Appointment Image
+  #       run: |
+  #         docker build -t ${{ secrets.ECR_REPO_URI_APPOINTMENT }} ./microservices/appointment
+  #         docker push ${{ secrets.ECR_REPO_URI_APPOINTMENT }}
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  # deploy:
+  #   name: Deploy to ECS
+  #   runs-on: ubuntu-latest
+  #   needs: docker
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.ROLE }}
-          aws-region: us-east-1
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Deploy Patient Service
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ecs-task-def-patient.json
-          service: ${{ secrets.ECS_SERVICE_PATIENT }}
-          cluster: ${{ secrets.ECS_CLUSTER }}
-          wait-for-service-stability: true
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         role-to-assume: ${{ secrets.ROLE }}
+  #         aws-region: us-east-1
 
-      - name: Deploy Appointment Service
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ecs-task-def-appointment.json
-          service: ${{ secrets.ECS_SERVICE_APPOINTMENT }}
-          cluster: ${{ secrets.ECS_CLUSTER }}
-          wait-for-service-stability: true
+  #     - name: Deploy Patient Service
+  #       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+  #       with:
+  #         task-definition: ecs-task-def-patient.json
+  #         service: ${{ secrets.ECS_SERVICE_PATIENT }}
+  #         cluster: ${{ secrets.ECS_CLUSTER }}
+  #         wait-for-service-stability: true
+
+  #     - name: Deploy Appointment Service
+  #       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+  #       with:
+  #         task-definition: ecs-task-def-appointment.json
+  #         service: ${{ secrets.ECS_SERVICE_APPOINTMENT }}
+  #         cluster: ${{ secrets.ECS_CLUSTER }}
+  #         wait-for-service-stability: true
