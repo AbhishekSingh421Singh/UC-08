@@ -121,7 +121,7 @@ resource "aws_ecs_task_definition" "patient" {
   cpu                     = "256"
   memory                  = "512"
   execution_role_arn      = aws_iam_role.ecs_task_execution.arn
-  container_definitions   = file("container-def-patient.json")
+  container_definitions   = file("../container-def-patient.json")
 }
 
 resource "aws_ecs_task_definition" "appointment" {
@@ -131,7 +131,7 @@ resource "aws_ecs_task_definition" "appointment" {
   cpu                     = "256"
   memory                  = "512"
   execution_role_arn      = aws_iam_role.ecs_task_execution.arn
-  container_definitions   = file("container-def-appointment.json")
+  container_definitions   = file("../container-def-appointment.json")
 }
 
 # Target Groups
